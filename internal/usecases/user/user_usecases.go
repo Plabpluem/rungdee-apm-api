@@ -1,9 +1,15 @@
 package usecases
 
-import "rungdee-apm-api/internal/entities"
+import (
+	"rungdee-apm-api/internal/entities"
+	"rungdee-apm-api/internal/usecases/user/dto"
+)
 
 type UserUseCase interface {
 	Create(user *entities.User) (*entities.User, error)
+	FindAll() ([]*entities.User, error)
+	Find(dto *dto.FindUserDto) (*entities.User, error)
+	Update(dto *dto.UpdateUserDto) (*entities.User, error)
 }
 
 func NewUserService(repo UserRepository) UserUseCase {
@@ -17,4 +23,13 @@ type UserService struct {
 
 func (s *UserService) Create(user *entities.User) (*entities.User, error) {
 	return s.repo.Create(user)
+}
+func (s *UserService) FindAll() ([]*entities.User, error) {
+	return s.repo.FindAll()
+}
+func (s *UserService) Find(dto *dto.FindUserDto) (*entities.User, error) {
+	return s.repo.Find(dto)
+}
+func (s *UserService) Update(dto *dto.UpdateUserDto) (*entities.User, error) {
+	return s.repo.Update(dto)
 }
