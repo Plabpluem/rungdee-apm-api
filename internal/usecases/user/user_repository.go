@@ -10,4 +10,5 @@ type UserRepository interface {
 	FindAll() ([]*entities.User, error)
 	Find(dto *dto.FindUserDto) (*entities.User, error)
 	Update(dto *dto.UpdateUserDto) (*entities.User, error)
+	Login(dto *dto.LoginDto) (*entities.User, error)
 }

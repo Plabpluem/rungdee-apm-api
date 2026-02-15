@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"rungdee-apm-api/internal/entities"
+	"rungdee-apm-api/internal/routes"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -49,6 +50,9 @@ func main() {
 
 	app := fiber.New()
 	app.Use(cors.New())
+
+	api := app.Group("/api")
+	routes.UserRoutes(api, db)
 
 	app.Listen(":8080")
 }

@@ -10,6 +10,7 @@ type UserUseCase interface {
 	FindAll() ([]*entities.User, error)
 	Find(dto *dto.FindUserDto) (*entities.User, error)
 	Update(dto *dto.UpdateUserDto) (*entities.User, error)
+	Login(dto *dto.LoginDto) (*entities.User, error)
 }
 
 func NewUserService(repo UserRepository) UserUseCase {
@@ -32,4 +33,7 @@ func (s *UserService) Find(dto *dto.FindUserDto) (*entities.User, error) {
 }
 func (s *UserService) Update(dto *dto.UpdateUserDto) (*entities.User, error) {
 	return s.repo.Update(dto)
+}
+func (s *UserService) Login(dto *dto.LoginDto) (*entities.User, error) {
+	return s.repo.Login(dto)
 }

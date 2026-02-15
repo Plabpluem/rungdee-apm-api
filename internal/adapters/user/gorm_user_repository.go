@@ -1,6 +1,8 @@
 package adapter
 
 import (
+	"errors"
+	"fmt"
 	"rungdee-apm-api/internal/entities"
 	usecases "rungdee-apm-api/internal/usecases/user"
 	"rungdee-apm-api/internal/usecases/user/dto"
@@ -14,6 +16,19 @@ type GormUserRepository struct {
 
 func NewGormUserRepository(db *gorm.DB) usecases.UserRepository {
 	return &GormUserRepository{db: db}
+}
+
+func (r *GormUserRepository) Login(dto *dto.LoginDto) (*entities.User, error) {
+	var user entities.User
+
+	err := r.db.Where("username = ?", dto.Username).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("username %s not found", dto.Username)
+		}
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (r *GormUserRepository) Create(user *entities.User) (*entities.User, error) {
