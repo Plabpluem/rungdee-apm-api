@@ -18,20 +18,27 @@ func NewGormUserRepository(db *gorm.DB) usecases.UserRepository {
 	return &GormUserRepository{db: db}
 }
 
-func (r *GormUserRepository) Login(dto *dto.LoginDto) (*entities.User, error) {
+func (r *GormUserRepository) FindByUsername(username string) (*entities.User, error) {
 	var user entities.User
 
-	err := r.db.Where("username = ?", dto.Username).First(&user).Error
+	err := r.db.Where("username = ?", username).First(&user).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("username %s not found", dto.Username)
+			return nil, fmt.Errorf("username %s not found", username)
 		}
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (r *GormUserRepository) Create(user *entities.User) (*entities.User, error) {
+func (r *GormUserRepository) Create(dto *dto.SignUpDto) (*entities.User, error) {
+	user := &entities.User{
+		Username: dto.Username,
+		Password: dto.Password,
+		Name:     dto.Name,
+		Role:     dto.Role,
+	}
+
 	err := r.db.Create(user).Error
 
 	if err != nil {

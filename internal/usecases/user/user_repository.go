@@ -6,9 +6,9 @@ import (
 )
 
 type UserRepository interface {
-	Create(user *entities.User) (*entities.User, error)
+	Create(user *dto.SignUpDto) (*entities.User, error)
 	FindAll() ([]*entities.User, error)
 	Find(dto *dto.FindUserDto) (*entities.User, error)
 	Update(dto *dto.UpdateUserDto) (*entities.User, error)
-	Login(dto *dto.LoginDto) (*entities.User, error)
+	FindByUsername(username string) (*entities.User, error)
 }

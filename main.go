@@ -53,6 +53,7 @@ func main() {
 
 	api := app.Group("/api")
 	routes.UserRoutes(api, db)
+	routes.RoomRoutes(api, db)
 
 	app.Listen(":8080")
 }
