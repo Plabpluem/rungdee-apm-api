@@ -3,9 +3,11 @@ package adapter
 import (
 	"errors"
 	"fmt"
+	"rungdee-apm-api/internal/adapters/customer/response"
 	"rungdee-apm-api/internal/entities"
 	usecases "rungdee-apm-api/internal/usecases/customer"
 	"rungdee-apm-api/internal/usecases/customer/dto"
+	"rungdee-apm-api/pkg"
 
 	"gorm.io/gorm"
 )
@@ -34,18 +36,30 @@ func (r *GormCustomerRepository) Create(dto *dto.CreateCustomerDto) (*entities.C
 	return &customer, nil
 }
 
-func (r *GormCustomerRepository) Findall() ([]*entities.Customer, error) {
+func (r *GormCustomerRepository) Findall(dto *dto.FilterCustomerDto) (*response.CustomerPaginatedResponse, error) {
+
 	var customer []*entities.Customer
 	var total int64
+
+	pagination := pkg.Pagination{
+		Page:    dto.Page,
+		PerPage: dto.PerPage,
+	}
 
 	db := r.db.Model(&entities.Customer{})
 	db.Count(&total)
 
-	err := db.Find(&customer).Error
+	err := db.Limit(pagination.GetPerPage()).Offset(pagination.GetOffSet()).Find(&customer).Error
 	if err != nil {
 		return nil, err
 	}
-	return customer, nil
+	return &response.CustomerPaginatedResponse{
+		Data:       customer,
+		Total:      total,
+		Page:       pagination.GetPage(),
+		PerPage:    pagination.GetPerPage(),
+		TotalPages: int((total + int64(pagination.GetPerPage()) - 1) / int64(pagination.GetPerPage())),
+	}, nil
 }
 
 func (r *GormCustomerRepository) Find(dto *dto.FindCustomerDto) (*entities.Customer, error) {
@@ -57,7 +71,7 @@ func (r *GormCustomerRepository) Find(dto *dto.FindCustomerDto) (*entities.Custo
 		return nil, err
 	}
 
-	return &customer, err
+	return &customer, nil
 }
 
 func (r *GormCustomerRepository) Update(dto *dto.UpdateCustomerDto) (*entities.Customer, error) {
@@ -83,5 +97,5 @@ func (r *GormCustomerRepository) Update(dto *dto.UpdateCustomerDto) (*entities.C
 		return nil, err
 	}
 
-	return &customer, err
+	return &customer, nil
 }

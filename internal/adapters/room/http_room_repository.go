@@ -49,3 +49,15 @@ func (h *HttpRoomHandler) Find(c fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "fetch success", "data": room})
 }
+
+func (h *HttpRoomHandler) Update(c fiber.Ctx) error {
+	var dto dto.UpdateRoomDto
+	if err := c.Bind().Body(&dto); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid req"})
+	}
+	room, err := h.roomUseCase.Update(&dto)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "update success", "data": room})
+}

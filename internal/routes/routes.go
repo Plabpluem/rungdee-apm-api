@@ -1,8 +1,10 @@
 package routes
 
 import (
+	customerAdapter "rungdee-apm-api/internal/adapters/customer"
 	roomAdapters "rungdee-apm-api/internal/adapters/room"
 	userAdapter "rungdee-apm-api/internal/adapters/user"
+	customeUsecases "rungdee-apm-api/internal/usecases/customer"
 	roomUsecases "rungdee-apm-api/internal/usecases/room"
 	userUsecases "rungdee-apm-api/internal/usecases/user"
 	"rungdee-apm-api/pkg/middleware"
@@ -30,4 +32,18 @@ func RoomRoutes(app fiber.Router, db *gorm.DB) {
 	app.Get("/room", roomHttp.FindAll)
 	app.Get("/room/:id", roomHttp.Find)
 	app.Post("/room", roomHttp.Create)
+	app.Patch("/room", roomHttp.Update)
+}
+
+func CustomerRoutes(app fiber.Router, db *gorm.DB) {
+	customerDb := customerAdapter.NewGormCustomerRepository(db)
+	customerService := customeUsecases.NewCustomerService(customerDb)
+	customerHttp := customerAdapter.NewHttpCustomerHandler(customerService)
+
+	app.Use("/customer", middleware.AuthRequired, middleware.RbacRequired([]string{"admin", "employee"}))
+
+	app.Get("/customer", customerHttp.Findall)
+	app.Get("/customer/:id", customerHttp.Find)
+	app.Post("/customer", customerHttp.Create)
+	app.Patch("/customer", customerHttp.Update)
 }

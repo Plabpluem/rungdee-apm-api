@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"rungdee-apm-api/internal/adapters/customer/response"
 	"rungdee-apm-api/internal/entities"
 	"rungdee-apm-api/internal/usecases/customer/dto"
 )
@@ -8,7 +9,7 @@ import (
 // ตั้งชื่อ infaceface ของ usecase
 type CustomerUseCase interface {
 	Create(dto *dto.CreateCustomerDto) (*entities.Customer, error)
-	Findall() ([]*entities.Customer, error)
+	Findall(dto *dto.FilterCustomerDto) (*response.CustomerPaginatedResponse, error)
 	Find(dto *dto.FindCustomerDto) (*entities.Customer, error)
 	Update(dto *dto.UpdateCustomerDto) (*entities.Customer, error)
 }
@@ -25,8 +26,8 @@ func (s *CustomerService) Create(dto *dto.CreateCustomerDto) (*entities.Customer
 	return s.repo.Create(dto)
 }
 
-func (s *CustomerService) Findall() ([]*entities.Customer, error) {
-	return s.repo.Findall()
+func (s *CustomerService) Findall(dto *dto.FilterCustomerDto) (*response.CustomerPaginatedResponse, error) {
+	return s.repo.Findall(dto)
 }
 func (s *CustomerService) Find(dto *dto.FindCustomerDto) (*entities.Customer, error) {
 	return s.repo.Find(dto)
