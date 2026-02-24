@@ -8,15 +8,20 @@ import (
 
 type InvoiceUseCase interface {
 	Create(req *dto.CreateInvoiceDto) (*entities.Invoice, error)
+	Findall(dto *dto.FilterInvoiceDto) (*response.InvoicePaginatedResponse, error)
+	Find(dto *dto.FindInvoiceDto) (*entities.Invoice, error)
+	Update(req *dto.UpdateInvoiceDto) (*entities.Invoice, error)
+	Generate(dto *dto.FindInvoiceDto) ([]byte, error)
 }
 
-func NewInvoiceService(repo InvoiceRepository, contractRepo ContractReader) InvoiceUseCase {
-	return &InvoiceService{repo: repo}
+func NewInvoiceService(repo InvoiceRepository, contractRepo ContractReader, pdfRepo PdfGenerate) InvoiceUseCase {
+	return &InvoiceService{repo: repo, contractRepo: contractRepo, pdfRepo: pdfRepo}
 }
 
 type InvoiceService struct {
 	repo         InvoiceRepository
 	contractRepo ContractReader
+	pdfRepo      PdfGenerate
 }
 
 func (s *InvoiceService) Create(req *dto.CreateInvoiceDto) (*entities.Invoice, error) {
@@ -51,7 +56,7 @@ func (s *InvoiceService) Create(req *dto.CreateInvoiceDto) (*entities.Invoice, e
 		ElecUnit:     elec_unit,
 		PrevElecUnit: prev_elec_unit,
 		CurElecUnit:  req.CurElecUnit,
-		TotalAmount:  contract.Room.RentPrice + (contract.Room.WaterPerUnit * elec_unit) + (contract.Room.ElecPerUnit * water_unit),
+		TotalAmount:  contract.Room.RentPrice + (contract.Room.WaterPerUnit * water_unit) + (contract.Room.ElecPerUnit * elec_unit),
 	}
 	return s.repo.Create(dto)
 }
@@ -97,7 +102,21 @@ func (s *InvoiceService) Update(req *dto.UpdateInvoiceDto) (*entities.Invoice, e
 		ElecUnit:     elec_unit,
 		PrevElecUnit: prev_elec_unit,
 		CurElecUnit:  req.CurElecUnit,
-		TotalAmount:  contract.Room.RentPrice + (contract.Room.WaterPerUnit * elec_unit) + (contract.Room.ElecPerUnit * water_unit),
+		TotalAmount:  contract.Room.RentPrice + (contract.Room.WaterPerUnit * water_unit) + (contract.Room.ElecPerUnit * elec_unit),
 	}
 	return s.repo.Update(dto)
+}
+
+func (s *InvoiceService) Generate(req *dto.FindInvoiceDto) ([]byte, error) {
+	invoice, err := s.repo.Find(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.pdfRepo.Generate(&PdfData{
+		Invoice:  invoice,
+		Room:     invoice.Contract.Room,
+		Customer: invoice.Contract.Customer,
+	})
+	// ส่งไปที่ pdf adapters ส่วนประมวลผล gen pdf
 }

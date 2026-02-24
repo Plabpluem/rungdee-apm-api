@@ -36,7 +36,7 @@ func (h *HttpCustomerHandler) Findall(c fiber.Ctx) error {
 
 	query := new(dto.FilterCustomerDto)
 
-	if err := c.Bind().Query(&query); err != nil {
+	if err := c.Bind().Query(query); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid query"})
 	}
 
@@ -65,7 +65,19 @@ func (h *HttpCustomerHandler) Find(c fiber.Ctx) error {
 }
 
 func (h HttpCustomerHandler) Update(c fiber.Ctx) error {
+	uuidParams := c.Params("id")
+	customerUuid, err := uuid.Parse(uuidParams)
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid error"})
+	}
+
 	var dto dto.UpdateCustomerDto
+
+	if err := c.Bind().Body(&dto); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid req"})
+	}
+	dto.Uuid = customerUuid
 
 	customer, err := h.customerUseCase.Update(&dto)
 	if err != nil {

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ใบแจ้งหนี้ค่าเช่าห้องพัก - Invoice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@100;200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f4f4f5;
+        }
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none; }
+            .print-shadow-none { box-shadow: none !important; }
+            .print-border-none { border: none !important; }
+            @page { margin: 1cm; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Print Button -->
+    <div class="max-w-3xl mx-auto mb-6 flex justify-end no-print">
+        <button onclick="window.print()" class="bg-zinc-900 text-white px-6 py-2 rounded-lg font-medium hover:bg-zinc-800 transition-all shadow-sm flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            พิมพ์ใบแจ้งหนี้ (PDF)
+        </button>
+    </div>
+
+    <!-- Invoice Container -->
+    <div class="max-w-3xl mx-auto bg-white shadow-2xl rounded-xl overflow-hidden border border-zinc-200 print-shadow-none print-border-none">
+        
+        <!-- Header Section -->
+        <div class="border-b border-zinc-200 p-8 md:p-12">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-zinc-900 rounded-lg flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M12 6h.01"></path><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-black tracking-tight text-zinc-900 uppercase">ใบแจ้งหนี้ / INVOICE</h1>
+                        <p class="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em]">Room Rental Management</p>
+                    </div>
+                </div>
+                <div class="text-left md:text-right">
+                    <p class="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-1">เลขที่ใบแจ้งหนี้ / Invoice No.</p>
+                    <p class="font-mono text-xl font-bold text-zinc-900">#INV-2024001</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Body -->
+        <div class="p-8 md:p-12 space-y-12">
+            
+            <!-- Info Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 border-b border-zinc-100 pb-10">
+                <div class="space-y-4">
+                    <p class="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">ข้อมูลผู้เช่า / Tenant</p>
+                    <div>
+                        <p class="text-xl font-bold text-zinc-900">คุณสมชาย ใจดี</p>
+                        <p class="text-zinc-500 text-sm">ห้องพักหมายเลข: <span class="text-zinc-900 font-bold">402</span></p>
+                        <p class="text-zinc-500 text-sm">โทร: 081-234-5678</p>
+                    </div>
+                </div>
+                <div class="md:text-right space-y-4">
+                    <p class="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">วันที่ออกบิล / Date</p>
+                    <div>
+                        <p class="text-lg font-bold text-zinc-900">24 กุมภาพันธ์ 2567</p>
+                        <p class="text-zinc-400 text-xs italic">กำหนดชำระภายในวันที่ 5 ของเดือน</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Section -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-zinc-900 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">
+                            <th class="py-4">รายการ / Description</th>
+                            <th class="py-4 text-right">เลขมิเตอร์ / Units</th>
+                            <th class="py-4 text-right">จำนวน / Qty</th>
+                            <th class="py-4 text-right">ราคาหน่วยละ / Price</th>
+                            <th class="py-4 text-right text-zinc-900">รวมเงิน / Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-zinc-100">
+                        <tr>
+                            <td class="py-6">
+                                <p class="font-bold text-zinc-900">ค่าเช่าห้องพัก</p>
+                                <p class="text-[10px] text-zinc-400 uppercase tracking-widest">Monthly Rent</p>
+                            </td>
+                            <td class="py-6 text-right text-zinc-300">-</td>
+                            <td class="py-6 text-right text-zinc-900 font-medium">1</td>
+                            <td class="py-6 text-right text-zinc-900 font-medium">4,500.00</td>
+                            <td class="py-6 text-right font-bold text-zinc-900">4,500.00</td>
+                        </tr>
+                        <tr>
+                            <td class="py-6">
+                                <p class="font-bold text-zinc-900">ค่าไฟฟ้า</p>
+                                <p class="text-[10px] text-zinc-400 uppercase tracking-widest">Electricity (8420 - 8545)</p>
+                            </td>
+                            <td class="py-6 text-right text-zinc-500 font-mono text-xs">8420 - 8545</td>
+                            <td class="py-6 text-right text-zinc-900 font-medium">125</td>
+                            <td class="py-6 text-right text-zinc-900 font-medium">7.00</td>
+                            <td class="py-6 text-right font-bold text-zinc-900">875.00</td>
+                        </tr>
+                        <tr>
+                            <td class="py-6">
+                                <p class="font-bold text-zinc-900">ค่าน้ำประปา</p>
+                                <p class="text-[10px] text-zinc-400 uppercase tracking-widest">Water Supply (1250 - 1265)</p>
+                            </td>
+                            <td class="py-6 text-right text-zinc-500 font-mono text-xs">1250 - 1265</td>
+                            <td class="py-6 text-right text-zinc-900 font-medium">15</td>
+                            <td class="py-6 text-right text-zinc-900 font-medium">20.00</td>
+                            <td class="py-6 text-right font-bold text-zinc-900">300.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="flex flex-col md:flex-row justify-between gap-12 pt-10 border-t border-zinc-200">
+                <div class="flex-1">
+                    <div class="bg-zinc-50 p-6 rounded-lg border border-zinc-100">
+                        <p class="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 mb-4">หมายเหตุ / Note</p>
+                        <ul class="text-xs text-zinc-500 space-y-2 list-disc pl-4 leading-relaxed">
+                            <li>กรุณาชำระเงินภายในวันที่กำหนดเพื่อหลีกเลี่ยงค่าปรับ</li>
+                            <li>โอนเงินเข้าบัญชี <span class="text-zinc-900 font-bold">ธ.กสิกรไทย 000-0-00000-0</span></li>
+                            <li>ส่งหลักฐานการโอนเงินผ่านทาง Line: @roomrental</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="w-full md:w-72 space-y-3">
+                    <div class="flex justify-between text-sm text-zinc-500">
+                        <span class="uppercase tracking-widest">ยอดรวม / Subtotal</span>
+                        <span class="font-medium">5,675.00 ฿</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-zinc-500">
+                        <span class="uppercase tracking-widest">ภาษี / VAT (0%)</span>
+                        <span class="font-medium">0.00 ฿</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-4 border-t-2 border-zinc-900">
+                        <span class="text-sm font-black uppercase tracking-[0.1em] text-zinc-900">ยอดสุทธิ / Total</span>
+                        <span class="text-3xl font-black text-zinc-900">5,675.00 ฿</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Section -->
+            <div class="pt-24 pb-4 text-center">
+                <div class="flex justify-center gap-12 md:gap-32 mb-16">
+                    <div class="w-48 border-t border-zinc-300 pt-3">
+                        <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">ผู้รับเงิน / Receiver</p>
+                    </div>
+                    <div class="w-48 border-t border-zinc-300 pt-3">
+                        <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">ผู้จ่ายเงิน / Payer</p>
+                    </div>
+                </div>
+                <p class="text-[9px] text-zinc-300 uppercase tracking-[0.5em] font-medium">Thank you for choosing our service</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

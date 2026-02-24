@@ -24,11 +24,13 @@ func NewGormContractRepository(db *gorm.DB) *GormContract {
 
 func (r *GormContract) Create(dto *dto.CreateContractDto) (*entities.Contract, error) {
 	contract := entities.Contract{
-		RoomId:     dto.RoomId,
-		CustomerId: dto.CustomerId,
-		StartDate:  dto.StartDate,
-		EndDate:    dto.EndDate,
-		Status:     dto.Status,
+		RoomId:         dto.RoomId,
+		CustomerId:     dto.CustomerId,
+		StartDate:      dto.StartDate,
+		EndDate:        dto.EndDate,
+		Status:         dto.Status,
+		StartElecUnit:  dto.StartElecUnit,
+		StartWaterUnit: dto.StartWaterUnit,
 	}
 
 	if err := r.db.Create(&contract).Error; err != nil {
@@ -50,7 +52,7 @@ func (r *GormContract) Findall(dto *dto.FilterContractDto) (*response.ContractPa
 	db := r.db.Model(&entities.Contract{})
 	db.Count(&total)
 
-	err := db.Limit(pagination.GetPerPage()).Offset(pagination.GetOffSet()).Find(&contracts).Error
+	err := db.Limit(pagination.GetPerPage()).Offset(pagination.GetOffSet()).Preload("Customer").Preload("Room").Find(&contracts).Error
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +69,7 @@ func (r *GormContract) Findall(dto *dto.FilterContractDto) (*response.ContractPa
 func (r *GormContract) Findone(dto *dto.FindContractDto) (*entities.Contract, error) {
 	var contract entities.Contract
 
-	err := r.db.Where("uuid = ?", dto.Uuid).Preload("Room").First(&contract).Error
+	err := r.db.Where("uuid = ?", dto.Uuid).Preload("Customer").Preload("Room").First(&contract).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -75,7 +77,7 @@ func (r *GormContract) Findone(dto *dto.FindContractDto) (*entities.Contract, er
 		}
 		return nil, err
 	}
-	return &contract, err
+	return &contract, nil
 }
 func (r *GormContract) Update(dto *dto.UpdateContractDto) (*entities.Contract, error) {
 	var contract entities.Contract
@@ -90,11 +92,13 @@ func (r *GormContract) Update(dto *dto.UpdateContractDto) (*entities.Contract, e
 	}
 
 	err = r.db.Model(&contract).Updates(&entities.Contract{
-		RoomId:     dto.RoomId,
-		CustomerId: dto.CustomerId,
-		StartDate:  dto.StartDate,
-		EndDate:    dto.EndDate,
-		Status:     dto.Status,
+		RoomId:         dto.RoomId,
+		CustomerId:     dto.CustomerId,
+		StartDate:      dto.StartDate,
+		EndDate:        dto.EndDate,
+		Status:         dto.Status,
+		StartElecUnit:  dto.StartElecUnit,
+		StartWaterUnit: dto.StartWaterUnit,
 	}).Error
 
 	if err != nil {
@@ -114,7 +118,7 @@ func (r *GormContract) FindByUuid(uuid uuid.UUID) (*entities.Contract, error) {
 		}
 		return nil, err
 	}
-	return &contract, err
+	return &contract, nil
 }
 
 func (r *GormContract) FindById(id uint) (*entities.Contract, error) {
@@ -128,5 +132,5 @@ func (r *GormContract) FindById(id uint) (*entities.Contract, error) {
 		}
 		return nil, err
 	}
-	return &contract, err
+	return &contract, nil
 }

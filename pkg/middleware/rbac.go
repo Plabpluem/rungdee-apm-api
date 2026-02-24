@@ -6,7 +6,7 @@ func RbacRequired(roleRequired []string) fiber.Handler {
 	return func(c fiber.Ctx) error {
 		role, ok := c.Locals("role").(string)
 		if !ok {
-			return c.Status(fiber.StatusUnauthorized).JSON("Role not found")
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Role not found"})
 		}
 
 		for _, j := range roleRequired {
@@ -14,6 +14,6 @@ func RbacRequired(roleRequired []string) fiber.Handler {
 				return c.Next()
 			}
 		}
-		return c.Status(fiber.StatusForbidden).JSON("Permission denied")
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Permission denied"})
 	}
 }

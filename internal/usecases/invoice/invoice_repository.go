@@ -19,3 +19,13 @@ type ContractReader interface {
 	FindByUuid(uuid uuid.UUID) (*entities.Contract, error)
 	FindById(id uint) (*entities.Contract, error)
 }
+
+type PdfGenerate interface {
+	Generate(dto *PdfData) ([]byte, error)
+}
+
+type PdfData struct {
+	Invoice  *entities.Invoice
+	Room     *entities.Room
+	Customer *entities.Customer
+}

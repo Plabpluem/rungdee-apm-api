@@ -19,7 +19,7 @@ func NewHttpContractHandler(usecase usecases.ContractUseCase) *HttpContractHandl
 func (h *HttpContractHandler) Findall(c fiber.Ctx) error {
 	query := new(dto.FilterContractDto)
 
-	if err := c.Bind().Query(&query); err != nil {
+	if err := c.Bind().Query(query); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid query"})
 	}
 
@@ -64,11 +64,18 @@ func (h *HttpContractHandler) Find(c fiber.Ctx) error {
 }
 
 func (h *HttpContractHandler) Update(c fiber.Ctx) error {
+	uuidParams := c.Params("id")
+	contractUuid, err := uuid.Parse(uuidParams)
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid error"})
+	}
 	var dto dto.UpdateContractDto
 	if err := c.Bind().Body(&dto); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid req"})
 
 	}
+	dto.Uuid = contractUuid
 
 	contract, err := h.contractUseCase.Update(&dto)
 	if err != nil {

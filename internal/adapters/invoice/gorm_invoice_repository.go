@@ -57,7 +57,7 @@ func (r *GormInvoiceRepository) Findall(dto *dto.FilterInvoiceDto) (*response.In
 func (r *GormInvoiceRepository) Find(dto *dto.FindInvoiceDto) (*entities.Invoice, error) {
 	var invoice entities.Invoice
 
-	err := r.db.Where("uuid = ?", dto.UUid).First(&invoice).Error
+	err := r.db.Where("uuid = ?", dto.UUid).Preload("Contract.Room").Preload("Contract.Customer").First(&invoice).Error
 
 	if err != nil {
 		return nil, err

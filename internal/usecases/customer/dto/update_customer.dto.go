@@ -8,5 +8,5 @@ type UpdateCustomerDto struct {
 	LastName   string    `json:"last_name"`
 	IdCard     string    `json:"id_card"`
 	LineUserId string    `json:"line_user_id"`
-	IsActive   bool      `json:"is_active"`
+	IsActive   *bool     `json:"is_active"`
 }
