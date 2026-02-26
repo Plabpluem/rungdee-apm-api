@@ -37,8 +37,8 @@ func (s *InvoiceService) Create(req *dto.CreateInvoiceDto) (*entities.Invoice, e
 		prev_elec_unit = lastItem.CurElecUnit
 		prev_water_unit = lastItem.CurWaterUnit
 	} else {
-		prev_elec_unit = req.PrevElecUnit
-		prev_water_unit = req.PrevWaterUnit
+		prev_elec_unit = contract.StartElecUnit
+		prev_water_unit = contract.StartWaterUnit
 	}
 
 	elec_unit := req.CurElecUnit - prev_elec_unit
@@ -49,6 +49,8 @@ func (s *InvoiceService) Create(req *dto.CreateInvoiceDto) (*entities.Invoice, e
 		RentPrice:     contract.Room.RentPrice,
 		WaterPrice:    contract.Room.WaterPerUnit * water_unit,
 		ElecPrice:     contract.Room.ElecPerUnit * elec_unit,
+		ElecPerUnit:   contract.Room.ElecPerUnit,
+		WaterPerUnit:  contract.Room.WaterPerUnit,
 		WaterUnit:     water_unit,
 		PrevWaterUnit: prev_water_unit,
 		CurWaterUnit:  req.CurWaterUnit,
@@ -77,8 +79,8 @@ func (s *InvoiceService) Update(req *dto.UpdateInvoiceDto) (*entities.Invoice, e
 
 	var prev_elec_unit float64
 	var prev_water_unit float64
-	if len(*contract.Invoice) > 0 {
-		lastItem := (*contract.Invoice)[len(*contract.Invoice)-1]
+	if len(*contract.Invoice)-1 > 0 {
+		lastItem := (*contract.Invoice)[len(*contract.Invoice)-2]
 		prev_elec_unit = lastItem.CurElecUnit
 		prev_water_unit = lastItem.CurWaterUnit
 	} else {
@@ -95,6 +97,8 @@ func (s *InvoiceService) Update(req *dto.UpdateInvoiceDto) (*entities.Invoice, e
 		RentPrice:     contract.Room.RentPrice,
 		WaterPrice:    contract.Room.WaterPerUnit * water_unit,
 		ElecPrice:     contract.Room.ElecPerUnit * elec_unit,
+		ElecPerUnit:   contract.Room.ElecPerUnit,
+		WaterPerUnit:  contract.Room.WaterPerUnit,
 		WaterUnit:     water_unit,
 		PrevWaterUnit: prev_water_unit,
 		CurWaterUnit:  req.CurWaterUnit,
@@ -118,5 +122,4 @@ func (s *InvoiceService) Generate(req *dto.FindInvoiceDto) ([]byte, error) {
 		Room:     invoice.Contract.Room,
 		Customer: invoice.Contract.Customer,
 	})
-	// ส่งไปที่ pdf adapters ส่วนประมวลผล gen pdf
 }

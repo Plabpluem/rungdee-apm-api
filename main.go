@@ -5,6 +5,7 @@ import (
 	"os"
 	"rungdee-apm-api/internal/entities"
 	"rungdee-apm-api/internal/routes"
+	"rungdee-apm-api/pkg"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -48,7 +49,9 @@ func main() {
 
 	db.AutoMigrate(&entities.User{}, &entities.Customer{}, &entities.Contract{}, &entities.Room{}, &entities.Invoice{})
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		StructValidator: pkg.NewStructValidator(),
+	})
 	app.Use(cors.New())
 
 	api := app.Group("/api")

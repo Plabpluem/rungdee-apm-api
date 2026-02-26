@@ -81,5 +81,5 @@ func InvoiceRoutes(app fiber.Router, db *gorm.DB) {
 	app.Get("/invoice/:id", invoiceHttp.Find)
 	app.Post("/invoice", invoiceHttp.Create)
 	app.Patch("/invoice/:id", invoiceHttp.Update)
-	// app.Post("/invoice/generate/:id")
+	app.Post("/invoice/generate/:id", invoiceHttp.GeneratePdf)
 }

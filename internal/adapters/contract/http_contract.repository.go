@@ -48,7 +48,7 @@ func (h *HttpContractHandler) Create(c fiber.Ctx) error {
 }
 
 func (h *HttpContractHandler) Find(c fiber.Ctx) error {
-	uuidParams := c.Get("id")
+	uuidParams := c.Params("id")
 	contractUuid, err := uuid.Parse(uuidParams)
 
 	if err != nil {

@@ -36,6 +36,19 @@ func (p *ChromePdfGenerate) Generate(data *usecases.PdfData) ([]byte, error) {
 	if err := tmpl.Execute(&htmlBuf, data); err != nil {
 		return nil, err
 	}
+	// แปลงเป็นไฟล์ temp + navigate
+	tmpFile, err := os.CreateTemp("", "invoice-*.html")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.WriteString(htmlBuf.String()); err != nil {
+		return nil, err
+	}
+	tmpFile.Close()
+
+	fileUrl := "file://" + filepath.ToSlash(tmpFile.Name())
 
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
@@ -45,14 +58,8 @@ func (p *ChromePdfGenerate) Generate(data *usecases.PdfData) ([]byte, error) {
 
 	var pdfBytes []byte
 	err = chromedp.Run(ctx,
-		chromedp.Navigate("about:blank"),
-		chromedp.ActionFunc(func(ctx context.Context) error {
-			frameTree, err := page.GetFrameTree().Do(ctx)
-			if err != nil {
-				return err
-			}
-			return page.SetDocumentContent(frameTree.Frame.ID, htmlBuf.String()).Do(ctx)
-		}),
+		chromedp.Navigate(fileUrl),
+		chromedp.WaitReady("body"),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			buf, _, err := page.PrintToPDF().
 				WithPaperWidth(8.27). // A4
