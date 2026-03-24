@@ -41,7 +41,7 @@ func (r *GormInvoiceRepository) Findall(dto *dto.FilterInvoiceDto) (*response.In
 	db := r.db.Model(&entities.Invoice{})
 	db.Count(&total)
 
-	err := db.Limit(pagination.GetPerPage()).Offset(pagination.GetOffSet()).Find(&invoice).Error
+	err := db.Limit(pagination.GetPerPage()).Offset(pagination.GetOffSet()).Preload("Contract.Customer").Find(&invoice).Error
 	if err != nil {
 		return nil, err
 	}

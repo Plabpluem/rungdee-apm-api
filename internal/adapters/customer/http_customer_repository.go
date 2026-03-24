@@ -64,7 +64,7 @@ func (h *HttpCustomerHandler) Find(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "fetch success", "data": customer})
 }
 
-func (h HttpCustomerHandler) Update(c fiber.Ctx) error {
+func (h *HttpCustomerHandler) Update(c fiber.Ctx) error {
 	uuidParams := c.Params("id")
 	customerUuid, err := uuid.Parse(uuidParams)
 
@@ -84,4 +84,13 @@ func (h HttpCustomerHandler) Update(c fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "update success", "data": customer})
+}
+
+func (h *HttpCustomerHandler) FindallDropdown(c fiber.Ctx) error {
+	customer, err := h.customerUseCase.FindallDropdown()
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "fetch success", "data": customer})
+
 }

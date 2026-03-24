@@ -4,6 +4,7 @@ import (
 	"rungdee-apm-api/internal/adapters/customer/response"
 	"rungdee-apm-api/internal/entities"
 	"rungdee-apm-api/internal/usecases/customer/dto"
+	responsePkg "rungdee-apm-api/pkg/response"
 )
 
 // ตั้งชื่อ infaceface ของ usecase
@@ -12,6 +13,7 @@ type CustomerUseCase interface {
 	Findall(dto *dto.FilterCustomerDto) (*response.CustomerPaginatedResponse, error)
 	Find(dto *dto.FindCustomerDto) (*entities.Customer, error)
 	Update(dto *dto.UpdateCustomerDto) (*entities.Customer, error)
+	FindallDropdown() ([]*responsePkg.FindAllDropdownResponse, error)
 }
 
 func NewCustomerService(repo CustomerRepository) CustomerUseCase {
@@ -34,4 +36,21 @@ func (s *CustomerService) Find(dto *dto.FindCustomerDto) (*entities.Customer, er
 }
 func (s *CustomerService) Update(dto *dto.UpdateCustomerDto) (*entities.Customer, error) {
 	return s.repo.Update(dto)
+}
+
+func (s *CustomerService) FindallDropdown() ([]*responsePkg.FindAllDropdownResponse, error) {
+	customer, err := s.repo.FindallDropdown()
+	if err != nil {
+		return nil, err
+	}
+
+	customer_response := make([]*responsePkg.FindAllDropdownResponse, 0, len(customer))
+	for _, item := range customer {
+		customer_response = append(customer_response, &responsePkg.FindAllDropdownResponse{
+			Label: item.Name,
+			Value: item.ID,
+		})
+	}
+	return customer_response, nil
+
 }

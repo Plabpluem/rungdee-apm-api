@@ -21,12 +21,16 @@ func NewGormCustomerRepository(db *gorm.DB) usecases.CustomerRepository {
 }
 
 func (r *GormCustomerRepository) Create(dto *dto.CreateCustomerDto) (*entities.Customer, error) {
+	isActive := true
+	if dto.IsActive != nil {
+		isActive = *dto.IsActive
+	}
 	customer := entities.Customer{
 		Name:       dto.Name,
 		LastName:   dto.LastName,
 		IdCard:     dto.IdCard,
 		LineUserId: dto.LineUserId,
-		IsActive:   dto.IsActive,
+		IsActive:   &isActive,
 	}
 	err := r.db.Create(&customer).Error
 
@@ -98,4 +102,15 @@ func (r *GormCustomerRepository) Update(dto *dto.UpdateCustomerDto) (*entities.C
 	}
 
 	return &customer, nil
+}
+
+func (r *GormCustomerRepository) FindallDropdown() ([]*entities.Customer, error) {
+	var customer []*entities.Customer
+	db := r.db.Model(&entities.Customer{})
+
+	err := db.Find(&customer).Error
+	if err != nil {
+		return nil, err
+	}
+	return customer, nil
 }

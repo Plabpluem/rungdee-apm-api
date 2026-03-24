@@ -11,4 +11,5 @@ type CustomerRepository interface {
 	Findall(dto *dto.FilterCustomerDto) (*response.CustomerPaginatedResponse, error)
 	Find(dto *dto.FindCustomerDto) (*entities.Customer, error)
 	Update(dto *dto.UpdateCustomerDto) (*entities.Customer, error)
+	FindallDropdown() ([]*entities.Customer, error)
 }

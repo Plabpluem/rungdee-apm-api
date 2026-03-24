@@ -35,9 +35,10 @@ func RoomRoutes(app fiber.Router, db *gorm.DB) {
 	app.Use("/room", middleware.AuthRequired, middleware.RbacRequired([]string{"admin", "employee"}))
 
 	app.Get("/room", roomHttp.FindAll)
+	app.Get("/room/dropdown", roomHttp.FindallDropdown)
 	app.Get("/room/:id", roomHttp.Find)
 	app.Post("/room", roomHttp.Create)
-	app.Patch("/room", roomHttp.Update)
+	app.Patch("/room/:id", roomHttp.Update)
 }
 
 func CustomerRoutes(app fiber.Router, db *gorm.DB) {
@@ -48,6 +49,7 @@ func CustomerRoutes(app fiber.Router, db *gorm.DB) {
 	app.Use("/customer", middleware.AuthRequired, middleware.RbacRequired([]string{"admin", "employee"}))
 
 	app.Get("/customer", customerHttp.Findall)
+	app.Get("/customer/dropdown", customerHttp.FindallDropdown)
 	app.Get("/customer/:id", customerHttp.Find)
 	app.Post("/customer", customerHttp.Create)
 	app.Patch("/customer/:id", customerHttp.Update)

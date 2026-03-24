@@ -69,7 +69,7 @@ func (r *GormContract) Findall(dto *dto.FilterContractDto) (*response.ContractPa
 func (r *GormContract) Findone(dto *dto.FindContractDto) (*entities.Contract, error) {
 	var contract entities.Contract
 
-	err := r.db.Where("uuid = ?", dto.Uuid).Preload("Customer").Preload("Room").First(&contract).Error
+	err := r.db.Where("uuid = ?", dto.Uuid).Preload("Customer").Preload("Room").Preload("Invoice").First(&contract).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

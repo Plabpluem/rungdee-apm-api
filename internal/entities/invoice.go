@@ -7,7 +7,7 @@ import (
 
 type Invoice struct {
 	gorm.Model
-	Uuid          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();uniqueIndex"`
+	Uuid          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();uniqueIndex" json:"uuid"`
 	ContractId    uint      `json:"contract_id"`
 	RentPrice     float64   `json:"rent_price"`
 	PrevWaterUnit float64   `json:"prev_water_unit"`
