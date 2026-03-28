@@ -1,6 +1,5 @@
-FROM golang:1.25-bullseye
+FROM golang:latest
 
-# ติดตั้ง chromium
 RUN apt-get update && apt-get install -y chromium
 
 WORKDIR /app
