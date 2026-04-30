@@ -46,6 +46,8 @@ func CustomerRoutes(app fiber.Router, db *gorm.DB) {
 	customerService := customeUsecases.NewCustomerService(customerDb)
 	customerHttp := customerAdapter.NewHttpCustomerHandler(customerService)
 
+	app.Patch("/line-prescreen/:ref", customerHttp.UpdateLinePrescreen)
+
 	app.Use("/customer", middleware.AuthRequired, middleware.RbacRequired([]string{"admin", "employee"}))
 
 	app.Get("/customer", customerHttp.Findall)
@@ -54,8 +56,6 @@ func CustomerRoutes(app fiber.Router, db *gorm.DB) {
 	app.Post("/customer", customerHttp.Create)
 	app.Patch("/customer/:id", customerHttp.Update)
 	app.Post("/customer/prescreen", customerHttp.GeneratePrescreen)
-
-	app.Patch("/customer-line/:ref", customerHttp.UpdateLinePrescreen)
 }
 
 func ContractRoutes(app fiber.Router, db *gorm.DB) {
