@@ -53,6 +53,9 @@ func CustomerRoutes(app fiber.Router, db *gorm.DB) {
 	app.Get("/customer/:id", customerHttp.Find)
 	app.Post("/customer", customerHttp.Create)
 	app.Patch("/customer/:id", customerHttp.Update)
+	app.Post("/customer/prescreen", customerHttp.GeneratePrescreen)
+
+	app.Patch("/customer-line/:ref", customerHttp.UpdateLinePrescreen)
 }
 
 func ContractRoutes(app fiber.Router, db *gorm.DB) {

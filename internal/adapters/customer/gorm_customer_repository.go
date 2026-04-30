@@ -8,6 +8,7 @@ import (
 	usecases "rungdee-apm-api/internal/usecases/customer"
 	"rungdee-apm-api/internal/usecases/customer/dto"
 	"rungdee-apm-api/pkg"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -113,4 +114,62 @@ func (r *GormCustomerRepository) FindallDropdown() ([]*entities.Customer, error)
 		return nil, err
 	}
 	return customer, nil
+}
+
+func (r *GormCustomerRepository) GeneratePrescreen(dto *dto.CreateCustomerPrescreenDto) (*entities.CustomerLinePrescreen, error) {
+	customer_prescreen := entities.CustomerLinePrescreen{
+		CustomerId: dto.CustomerId,
+		ExpireDate: time.Now().Add(time.Hour * 1),
+		Ref:        dto.Ref,
+	}
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&entities.CustomerLinePrescreen{}).
+			Where("customer_id = ? AND delete_at IS NULL", dto.CustomerId).
+			Update("delete_at", time.Now()).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Create(&customer_prescreen).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return &customer_prescreen, nil
+}
+
+func (r *GormCustomerRepository) UpdateLinePrescreen(dto *dto.UpdateLinePrescreenDto) (*entities.Customer, error) {
+	var customer entities.Customer
+	var prescreen entities.CustomerLinePrescreen
+
+	err := r.db.Where("ref = ? AND delete_at IS NULL", dto.Ref).First(&prescreen).Error
+	if err != nil {
+		return nil, fmt.Errorf("ไม่พบ ref นี้หรือ หมดอายุแล้ว")
+	}
+
+	if err = r.db.Model(&prescreen).Update("delete_at", time.Now()).Error; err != nil {
+		return nil, err
+	}
+
+	err = r.db.Where("id = ?", prescreen.CustomerId).First(&customer).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("Not found customer")
+		}
+		return nil, err
+	}
+
+	err = r.db.Model(&customer).Updates(&entities.Customer{
+		LineUserId: dto.LineUserId,
+	}).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &customer, nil
 }

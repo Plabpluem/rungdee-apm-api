@@ -94,3 +94,33 @@ func (h *HttpCustomerHandler) FindallDropdown(c fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "fetch success", "data": customer})
 
 }
+
+func (h *HttpCustomerHandler) GeneratePrescreen(c fiber.Ctx) error {
+
+	var dto dto.CreateCustomerPrescreenDto
+
+	if err := c.Bind().Body(&dto); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid req"})
+	}
+	prescreen, err := h.customerUseCase.GeneratePrescreen(&dto)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "fetch success", "data": prescreen})
+}
+
+func (h *HttpCustomerHandler) UpdateLinePrescreen(c fiber.Ctx) error {
+	var dto dto.UpdateLinePrescreenDto
+	refParam := c.Params("ref")
+
+	if err := c.Bind().Body(&dto); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	dto.Ref = refParam
+	update, err := h.customerUseCase.UpdateLinePrescreen(&dto)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "update success", "data": update})
+
+}

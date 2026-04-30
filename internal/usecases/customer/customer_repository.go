@@ -12,4 +12,6 @@ type CustomerRepository interface {
 	Find(dto *dto.FindCustomerDto) (*entities.Customer, error)
 	Update(dto *dto.UpdateCustomerDto) (*entities.Customer, error)
 	FindallDropdown() ([]*entities.Customer, error)
+	GeneratePrescreen(dto *dto.CreateCustomerPrescreenDto) (*entities.CustomerLinePrescreen, error)
+	UpdateLinePrescreen(dto *dto.UpdateLinePrescreenDto) (*entities.Customer, error)
 }
