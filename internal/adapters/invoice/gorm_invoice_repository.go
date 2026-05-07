@@ -90,6 +90,7 @@ func (r *GormInvoiceRepository) Update(dto *entities.Invoice) (*entities.Invoice
 		PrevElecUnit: dto.PrevElecUnit,
 		CurElecUnit:  dto.CurElecUnit,
 		TotalAmount:  dto.TotalAmount,
+		LinkPdf:      dto.LinkPdf,
 	}).Error
 
 	if err != nil {

@@ -21,6 +21,7 @@ type Invoice struct {
 	ElecUnit      float64   `json:"elec_unit"`
 	ElecPrice     float64   `json:"elec_price"`
 	TotalAmount   float64   `json:"total_amount"`
+	LinkPdf       string    `json:"link_pdf"`
 
 	Contract *Contract `gorm:"foreignKey:ContractId;references:ID" json:"contract"`
 }

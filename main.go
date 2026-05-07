@@ -60,6 +60,7 @@ func main() {
 	routes.CustomerRoutes(api, db)
 	routes.ContractRoutes(api, db)
 	routes.InvoiceRoutes(api, db)
+	routes.StorageRoutes(api)
 
 	app.Listen(":8080")
 }
