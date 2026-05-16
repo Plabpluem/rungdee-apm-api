@@ -5,12 +5,15 @@ import (
 	customerAdapter "rungdee-apm-api/internal/adapters/customer"
 	invoiceAdapter "rungdee-apm-api/internal/adapters/invoice"
 	"rungdee-apm-api/internal/adapters/invoice/pdf"
+	"rungdee-apm-api/internal/adapters/line"
 	roomAdapters "rungdee-apm-api/internal/adapters/room"
+	storageAdapter "rungdee-apm-api/internal/adapters/storage"
 	userAdapter "rungdee-apm-api/internal/adapters/user"
 	contractUsecases "rungdee-apm-api/internal/usecases/contract"
 	customeUsecases "rungdee-apm-api/internal/usecases/customer"
 	invoiceUsecases "rungdee-apm-api/internal/usecases/invoice"
 	roomUsecases "rungdee-apm-api/internal/usecases/room"
+	storageUsecases "rungdee-apm-api/internal/usecases/storage"
 	userUsecases "rungdee-apm-api/internal/usecases/user"
 	"rungdee-apm-api/pkg/middleware"
 
@@ -46,6 +49,8 @@ func CustomerRoutes(app fiber.Router, db *gorm.DB) {
 	customerService := customeUsecases.NewCustomerService(customerDb)
 	customerHttp := customerAdapter.NewHttpCustomerHandler(customerService)
 
+	app.Patch("/line-prescreen/:ref", customerHttp.UpdateLinePrescreen)
+
 	app.Use("/customer", middleware.AuthRequired, middleware.RbacRequired([]string{"admin", "employee"}))
 
 	app.Get("/customer", customerHttp.Findall)
@@ -53,6 +58,7 @@ func CustomerRoutes(app fiber.Router, db *gorm.DB) {
 	app.Get("/customer/:id", customerHttp.Find)
 	app.Post("/customer", customerHttp.Create)
 	app.Patch("/customer/:id", customerHttp.Update)
+	app.Post("/customer/prescreen", customerHttp.GeneratePrescreen)
 }
 
 func ContractRoutes(app fiber.Router, db *gorm.DB) {
@@ -73,8 +79,10 @@ func InvoiceRoutes(app fiber.Router, db *gorm.DB) {
 	invoiceDb := invoiceAdapter.NewGormInvoiceRepository(db)
 	contractDb := contractAdapters.NewGormContractRepository(db)
 	pdfGenerate := pdf.NewChromePdfGenerate()
+	lineRepo := line.NewHttpLineRepository()
+	storageRepo := storageAdapter.NewStorageRepository()
 
-	invoiceService := invoiceUsecases.NewInvoiceService(invoiceDb, contractDb, pdfGenerate)
+	invoiceService := invoiceUsecases.NewInvoiceService(invoiceDb, contractDb, pdfGenerate, lineRepo, storageRepo)
 	invoiceHttp := invoiceAdapter.NewHttpInvoiceHandler(invoiceService)
 
 	app.Use("/invoice", middleware.AuthRequired, middleware.RbacRequired([]string{"admin", "employee"}))
@@ -84,4 +92,15 @@ func InvoiceRoutes(app fiber.Router, db *gorm.DB) {
 	app.Post("/invoice", invoiceHttp.Create)
 	app.Patch("/invoice/:id", invoiceHttp.Update)
 	app.Post("/invoice/generate/:id", invoiceHttp.GeneratePdf)
+	app.Post("/invoice/create-pdf/:id", invoiceHttp.CreatePdf)
+}
+
+func StorageRoutes(app fiber.Router) {
+	storageRepo := storageAdapter.NewStorageRepository()
+	storageService := storageUsecases.NewStorageService(storageRepo)
+	storageHttp := storageAdapter.NewHttpStorageHandler(storageService)
+
+	app.Use("/storage", middleware.AuthRequired)
+
+	app.Post("/storage/upload", storageHttp.UploadFile)
 }

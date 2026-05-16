@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"math/rand"
 	"rungdee-apm-api/internal/adapters/customer/response"
 	"rungdee-apm-api/internal/entities"
 	"rungdee-apm-api/internal/usecases/customer/dto"
@@ -14,6 +15,8 @@ type CustomerUseCase interface {
 	Find(dto *dto.FindCustomerDto) (*entities.Customer, error)
 	Update(dto *dto.UpdateCustomerDto) (*entities.Customer, error)
 	FindallDropdown() ([]*responsePkg.FindAllDropdownResponse, error)
+	GeneratePrescreen(dto *dto.CreateCustomerPrescreenDto) (*entities.CustomerLinePrescreen, error)
+	UpdateLinePrescreen(dto *dto.UpdateLinePrescreenDto) (*entities.Customer, error)
 }
 
 func NewCustomerService(repo CustomerRepository) CustomerUseCase {
@@ -53,4 +56,20 @@ func (s *CustomerService) FindallDropdown() ([]*responsePkg.FindAllDropdownRespo
 	}
 	return customer_response, nil
 
+}
+
+func (s *CustomerService) GeneratePrescreen(dto *dto.CreateCustomerPrescreenDto) (*entities.CustomerLinePrescreen, error) {
+
+	char := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+	var ref = ""
+
+	for i := 0; i < 20; i++ {
+		ref += string(char[rand.Intn(len(char))])
+	}
+	dto.Ref = ref
+	return s.repo.GeneratePrescreen(dto)
+}
+
+func (s *CustomerService) UpdateLinePrescreen(dto *dto.UpdateLinePrescreenDto) (*entities.Customer, error) {
+	return s.repo.UpdateLinePrescreen(dto)
 }

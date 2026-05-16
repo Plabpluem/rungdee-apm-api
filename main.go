@@ -47,7 +47,7 @@ func main() {
 		panic("Can't connect database")
 	}
 
-	db.AutoMigrate(&entities.User{}, &entities.Customer{}, &entities.Contract{}, &entities.Room{}, &entities.Invoice{})
+	db.AutoMigrate(&entities.User{}, &entities.Customer{}, &entities.CustomerLinePrescreen{}, &entities.Contract{}, &entities.Room{}, &entities.Invoice{})
 
 	app := fiber.New(fiber.Config{
 		StructValidator: pkg.NewStructValidator(),
@@ -60,6 +60,7 @@ func main() {
 	routes.CustomerRoutes(api, db)
 	routes.ContractRoutes(api, db)
 	routes.InvoiceRoutes(api, db)
+	routes.StorageRoutes(api)
 
 	app.Listen(":8080")
 }

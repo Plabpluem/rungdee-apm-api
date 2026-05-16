@@ -4,6 +4,7 @@ import (
 	"fmt"
 	usecases "rungdee-apm-api/internal/usecases/invoice"
 	"rungdee-apm-api/internal/usecases/invoice/dto"
+	"time"
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
@@ -103,9 +104,25 @@ func (h *HttpInvoiceHandlers) GeneratePdf(c fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	filename := fmt.Sprintf("invoice-%s-%s.pdf", invoice.Contract.Room.Number, invoice.Contract.Customer.Name)
+	filename := fmt.Sprintf("invoice-%s-%s-%s.pdf", invoice.Contract.Room.Number, invoice.Contract.Customer.Name, time.Now().Format("dd-mm-YYYY"))
 	c.Set("Content-Type", "application/pdf")
 	c.Set("Content-Disposition", fmt.Sprintf("inline; filename=%s", filename))
 	return c.Send(invoiceByte)
 
+}
+
+func (h *HttpInvoiceHandlers) CreatePdf(c fiber.Ctx) error {
+	uuidParams := c.Params("id")
+	invoiceUuid, err := uuid.Parse(uuidParams)
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid error"})
+	}
+
+	invoice_pdf, err := h.invoiceUseCase.CreatePdf(&dto.FindInvoiceDto{UUid: invoiceUuid})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "fetch success", "data": invoice_pdf})
 }
