@@ -7,6 +7,7 @@ import (
 	"rungdee-apm-api/internal/entities"
 	"rungdee-apm-api/internal/usecases/invoice/dto"
 	usecases "rungdee-apm-api/internal/usecases/line"
+	dto_line "rungdee-apm-api/internal/usecases/line/dto"
 	storage_usecases "rungdee-apm-api/internal/usecases/storage"
 	"time"
 )
@@ -18,6 +19,7 @@ type InvoiceUseCase interface {
 	Update(req *dto.UpdateInvoiceDto) (*entities.Invoice, error)
 	Generate(dto *dto.FindInvoiceDto) ([]byte, error)
 	CreatePdf(req *dto.FindInvoiceDto) (*entities.StorageResponse, error)
+	NotiToCustomer(req *dto.FindInvoiceDto) (*entities.Invoice, error)
 }
 
 func NewInvoiceService(repo InvoiceRepository, contractRepo ContractReader, pdfRepo PdfGenerate, lineRepo usecases.LineRepository, storageRepo storage_usecases.StorageRepository) InvoiceUseCase {
@@ -49,7 +51,15 @@ func (s *InvoiceService) Create(req *dto.CreateInvoiceDto) (*entities.Invoice, e
 		prev_water_unit = contract.StartWaterUnit
 	}
 
-	elec_unit := req.CurElecUnit - prev_elec_unit
+	var elec_unit float64
+
+	if req.CurElecUnit < prev_elec_unit {
+		first_round := 9999 - prev_elec_unit
+		last_round := 1 + req.CurElecUnit
+		elec_unit = first_round + last_round
+	} else {
+		elec_unit = req.CurElecUnit - prev_elec_unit
+	}
 	water_unit := req.CurWaterUnit - prev_water_unit
 
 	data_invoice := &entities.Invoice{
@@ -87,7 +97,21 @@ func (s *InvoiceService) Create(req *dto.CreateInvoiceDto) (*entities.Invoice, e
 }
 
 func (s *InvoiceService) Findall(dto *dto.FilterInvoiceDto) (*response.InvoicePaginatedResponse, error) {
-	return s.repo.Findall(dto)
+	response, err := s.repo.Findall(dto)
+	if err != nil {
+		return nil, err
+	}
+
+	for index, item := range response.Data {
+		if item.LinkPdf != "" {
+			image, err := s.storageRepo.GetUrl(item.LinkPdf, "pdf")
+			if err != nil {
+				return nil, err
+			}
+			response.Data[index].LinkPdf = image
+		}
+	}
+	return response, nil
 }
 
 func (s *InvoiceService) Find(dto *dto.FindInvoiceDto) (*entities.Invoice, error) {
@@ -96,6 +120,11 @@ func (s *InvoiceService) Find(dto *dto.FindInvoiceDto) (*entities.Invoice, error
 
 func (s *InvoiceService) Update(req *dto.UpdateInvoiceDto) (*entities.Invoice, error) {
 	contract, err := s.contractRepo.FindById(req.ContractId)
+	if err != nil {
+		return nil, err
+	}
+
+	prev_invoice, err := s.repo.Find(&dto.FindInvoiceDto{UUid: req.Uuid})
 	if err != nil {
 		return nil, err
 	}
@@ -111,10 +140,19 @@ func (s *InvoiceService) Update(req *dto.UpdateInvoiceDto) (*entities.Invoice, e
 		prev_water_unit = req.PrevWaterUnit
 	}
 
-	elec_unit := req.CurElecUnit - prev_elec_unit
+	var elec_unit float64
+
+	if req.CurElecUnit < prev_elec_unit {
+		first_round := 9999 - prev_elec_unit
+		last_round := 1 + req.CurElecUnit
+		elec_unit = first_round + last_round
+	} else {
+		elec_unit = req.CurElecUnit - prev_elec_unit
+	}
+
 	water_unit := req.CurWaterUnit - prev_water_unit
 
-	dto := &entities.Invoice{
+	dto_update := &entities.Invoice{
 		Uuid:          req.Uuid,
 		ContractId:    contract.ID,
 		RentPrice:     contract.Room.RentPrice,
@@ -131,7 +169,28 @@ func (s *InvoiceService) Update(req *dto.UpdateInvoiceDto) (*entities.Invoice, e
 		CurElecUnit:  req.CurElecUnit,
 		TotalAmount:  contract.Room.RentPrice + (contract.Room.WaterPerUnit * water_unit) + (contract.Room.ElecPerUnit * elec_unit),
 	}
-	return s.repo.Update(dto)
+
+	update, err := s.repo.Update(dto_update)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.CurElecUnit == prev_invoice.CurElecUnit && req.CurWaterUnit == prev_invoice.CurWaterUnit {
+		return update, nil
+	}
+
+	invoice_dto := &dto.FindInvoiceDto{
+		UUid: update.Uuid,
+	}
+
+	pdf_link, err := s.CreatePdf(invoice_dto)
+
+	dto_update = &entities.Invoice{
+		Uuid:    update.Uuid,
+		LinkPdf: pdf_link.BaseUrl,
+	}
+	return s.repo.Update(dto_update)
+
 }
 
 func (s *InvoiceService) Generate(req *dto.FindInvoiceDto) ([]byte, error) {
@@ -168,4 +227,76 @@ func (s *InvoiceService) CreatePdf(req *dto.FindInvoiceDto) (*entities.StorageRe
 	}
 
 	return uploadPdf, nil
+}
+
+func (s *InvoiceService) NotiToCustomer(req *dto.FindInvoiceDto) (*entities.Invoice, error) {
+	invoice, err := s.repo.Find(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if invoice.Contract.Customer.LineUserId == "" {
+		return nil, fmt.Errorf("ไม่พบเลข lineId")
+	}
+
+	pdf_link, err := s.storageRepo.GetUrl(invoice.LinkPdf, "pdf")
+	if err != nil {
+		return nil, err
+	}
+
+	data := &dto_line.LineFlesMessageDto{
+		To: invoice.Contract.Customer.LineUserId,
+		Messages: []map[string]any{
+			{
+				"type":    "flex",
+				"altText": "ใบแจ้งหนี้",
+				"contents": map[string]any{
+					"type": "bubble",
+					"header": map[string]any{
+						"type":   "box",
+						"layout": "vertical",
+						"contents": []map[string]any{
+							{
+								"type":   "text",
+								"text":   "ใบแจ้งหนี้",
+								"weight": "bold",
+								"size":   "xl",
+								"align":  "center",
+							},
+						},
+					},
+					"body": map[string]any{
+						"type":   "box",
+						"layout": "vertical",
+						"contents": []map[string]any{
+							{
+								"type": "text",
+								"text": "คุณสามารถดูลายละเอียดได้ที่ปุ่มด้านล่างนี้",
+								"wrap": true,
+							},
+						},
+					},
+					"footer": map[string]any{
+						"type":   "box",
+						"layout": "vertical",
+						"contents": []map[string]any{
+							{
+								"type":  "button",
+								"style": "primary",
+								"action": map[string]any{
+									"type":  "uri",
+									"label": "ดูใบแจ้งหนี้",
+									"uri":   pdf_link,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+	if err := s.lineRepo.SendFlexMessage(*data); err != nil {
+		return nil, err
+	}
+	return invoice, nil
 }

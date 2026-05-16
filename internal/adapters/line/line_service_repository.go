@@ -11,13 +11,13 @@ import (
 	"rungdee-apm-api/internal/usecases/line/dto"
 )
 
-type HttpLineRepository struct{}
+type LineServiceRepository struct{}
 
-func NewHttpLineRepository() usecases.LineRepository {
-	return &HttpLineRepository{}
+func NewLineRepository() usecases.LineRepository {
+	return &LineServiceRepository{}
 }
 
-func (h *HttpLineRepository) Sendmessage(data dto.LineMessageDto) error {
+func (h *LineServiceRepository) Sendmessage(data dto.LineMessageDto) error {
 	token := os.Getenv("LINE_CHANNEL_ACCESS_TOKEN")
 	if token == "" {
 		return fmt.Errorf("LINE_CHANNEL_ACCESS_TOKEN is not set")
@@ -27,7 +27,6 @@ func (h *HttpLineRepository) Sendmessage(data dto.LineMessageDto) error {
 	if err != nil {
 		return err
 	}
-
 	req, err := http.NewRequest(http.MethodPost, "https://api.line.me/v2/bot/message/push", bytes.NewBuffer(body))
 	if err != nil {
 		return err
@@ -49,7 +48,7 @@ func (h *HttpLineRepository) Sendmessage(data dto.LineMessageDto) error {
 	return nil
 }
 
-func (h *HttpLineRepository) SendFlexMessage(data dto.LineFlesMessageDto) error {
+func (h *LineServiceRepository) SendFlexMessage(data dto.LineFlesMessageDto) error {
 	token := os.Getenv("LINE_CHANNEL_ACCESS_TOKEN")
 	if token == "" {
 		return fmt.Errorf("LINE_CHANNEL_ACCESS_TOKEN is not set")

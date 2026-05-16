@@ -63,7 +63,8 @@ func CustomerRoutes(app fiber.Router, db *gorm.DB) {
 
 func ContractRoutes(app fiber.Router, db *gorm.DB) {
 	contractDb := contractAdapters.NewGormContractRepository(db)
-	contractService := contractUsecases.NewContractService(contractDb)
+	storageRepo := storageAdapter.NewStorageRepository()
+	contractService := contractUsecases.NewContractService(contractDb, storageRepo)
 	contractHttp := contractAdapters.NewHttpContractHandler(contractService)
 
 	app.Use("/contract", middleware.AuthRequired, middleware.RbacRequired([]string{"admin", "employee"}))
@@ -79,7 +80,7 @@ func InvoiceRoutes(app fiber.Router, db *gorm.DB) {
 	invoiceDb := invoiceAdapter.NewGormInvoiceRepository(db)
 	contractDb := contractAdapters.NewGormContractRepository(db)
 	pdfGenerate := pdf.NewChromePdfGenerate()
-	lineRepo := line.NewHttpLineRepository()
+	lineRepo := line.NewLineRepository()
 	storageRepo := storageAdapter.NewStorageRepository()
 
 	invoiceService := invoiceUsecases.NewInvoiceService(invoiceDb, contractDb, pdfGenerate, lineRepo, storageRepo)
@@ -93,6 +94,7 @@ func InvoiceRoutes(app fiber.Router, db *gorm.DB) {
 	app.Patch("/invoice/:id", invoiceHttp.Update)
 	app.Post("/invoice/generate/:id", invoiceHttp.GeneratePdf)
 	app.Post("/invoice/create-pdf/:id", invoiceHttp.CreatePdf)
+	app.Post("/invoice/send-message/:id", invoiceHttp.NotiToCustomer)
 }
 
 func StorageRoutes(app fiber.Router) {

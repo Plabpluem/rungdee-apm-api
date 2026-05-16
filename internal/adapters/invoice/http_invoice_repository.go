@@ -126,3 +126,18 @@ func (h *HttpInvoiceHandlers) CreatePdf(c fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "fetch success", "data": invoice_pdf})
 }
+
+func (h *HttpInvoiceHandlers) NotiToCustomer(c fiber.Ctx) error {
+	uuidParams := c.Params("id")
+	invoiceUuid, err := uuid.Parse(uuidParams)
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid error"})
+	}
+	response, err := h.invoiceUseCase.NotiToCustomer(&dto.FindInvoiceDto{UUid: invoiceUuid})
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "fetch success", "data": response})
+
+}
