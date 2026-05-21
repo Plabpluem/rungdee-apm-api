@@ -86,11 +86,12 @@ func (r *GormInvoiceRepository) Update(dto *entities.Invoice) (*entities.Invoice
 		PrevWaterUnit: dto.PrevWaterUnit,
 		CurWaterUnit:  dto.CurWaterUnit,
 
-		ElecUnit:     dto.ElecUnit,
-		PrevElecUnit: dto.PrevElecUnit,
-		CurElecUnit:  dto.CurElecUnit,
-		TotalAmount:  dto.TotalAmount,
-		LinkPdf:      dto.LinkPdf,
+		ElecUnit:       dto.ElecUnit,
+		PrevElecUnit:   dto.PrevElecUnit,
+		CurElecUnit:    dto.CurElecUnit,
+		TotalAmount:    dto.TotalAmount,
+		LinkPdf:        dto.LinkPdf,
+		IsUnlimitWater: dto.IsUnlimitWater,
 	}).Error
 
 	if err != nil {

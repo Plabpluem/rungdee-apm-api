@@ -60,25 +60,43 @@ func (s *InvoiceService) Create(req *dto.CreateInvoiceDto) (*entities.Invoice, e
 	} else {
 		elec_unit = req.CurElecUnit - prev_elec_unit
 	}
-	water_unit := req.CurWaterUnit - prev_water_unit
+
+	var water_unit, water_price, cur_water_unit float64
+
+	if req.IsUnlimitWater != nil && *req.IsUnlimitWater {
+		water_unit = 0
+		water_price = 200
+		cur_water_unit = prev_water_unit
+	} else {
+		if req.CurWaterUnit == nil {
+			return nil, fmt.Errorf("กรุณากรอก หน่วยน้ำปัจจุบัน")
+		}
+		cur_water_unit = *req.CurWaterUnit
+		water_unit = cur_water_unit - prev_water_unit
+		water_price = contract.Room.WaterPerUnit * water_unit
+	}
 
 	data_invoice := &entities.Invoice{
 		ContractId:    contract.ID,
 		RentPrice:     contract.Room.RentPrice,
-		WaterPrice:    contract.Room.WaterPerUnit * water_unit,
+		WaterPrice:    water_price,
 		ElecPrice:     contract.Room.ElecPerUnit * elec_unit,
 		ElecPerUnit:   contract.Room.ElecPerUnit,
 		WaterPerUnit:  contract.Room.WaterPerUnit,
-		WaterUnit:     water_unit,
+		WaterUnit:     &water_unit,
 		PrevWaterUnit: prev_water_unit,
-		CurWaterUnit:  req.CurWaterUnit,
+		CurWaterUnit:  cur_water_unit,
 
-		ElecUnit:     elec_unit,
-		PrevElecUnit: prev_elec_unit,
-		CurElecUnit:  req.CurElecUnit,
-		TotalAmount:  contract.Room.RentPrice + (contract.Room.WaterPerUnit * water_unit) + (contract.Room.ElecPerUnit * elec_unit),
+		ElecUnit:       elec_unit,
+		PrevElecUnit:   prev_elec_unit,
+		CurElecUnit:    req.CurElecUnit,
+		TotalAmount:    contract.Room.RentPrice + (water_price) + (contract.Room.ElecPerUnit * elec_unit),
+		IsUnlimitWater: req.IsUnlimitWater,
 	}
 	invoice, err := s.repo.Create(data_invoice)
+	if err != nil {
+		return nil, err
+	}
 
 	invoice_dto := &dto.FindInvoiceDto{
 		UUid: invoice.Uuid,
@@ -131,10 +149,22 @@ func (s *InvoiceService) Update(req *dto.UpdateInvoiceDto) (*entities.Invoice, e
 
 	var prev_elec_unit float64
 	var prev_water_unit float64
-	if len(*contract.Invoice)-1 > 0 {
-		lastItem := (*contract.Invoice)[len(*contract.Invoice)-2]
-		prev_elec_unit = lastItem.CurElecUnit
-		prev_water_unit = lastItem.CurWaterUnit
+
+	if len(*contract.Invoice) > 1 {
+		var index_previous int
+		for index, item := range *contract.Invoice {
+			if item.ID == prev_invoice.ID {
+				index_previous = index - 1
+			}
+		}
+		if index_previous < 0 {
+			prev_elec_unit = contract.StartElecUnit
+			prev_water_unit = contract.StartWaterUnit
+		} else {
+			lastItem := (*contract.Invoice)[index_previous]
+			prev_elec_unit = lastItem.CurElecUnit
+			prev_water_unit = lastItem.CurWaterUnit
+		}
 	} else {
 		prev_elec_unit = req.PrevElecUnit
 		prev_water_unit = req.PrevWaterUnit
@@ -150,24 +180,38 @@ func (s *InvoiceService) Update(req *dto.UpdateInvoiceDto) (*entities.Invoice, e
 		elec_unit = req.CurElecUnit - prev_elec_unit
 	}
 
-	water_unit := req.CurWaterUnit - prev_water_unit
+	var water_unit, water_price, cur_water_unit float64
+
+	if req.IsUnlimitWater != nil && *req.IsUnlimitWater {
+		water_unit = 0
+		water_price = 200
+		cur_water_unit = prev_water_unit
+	} else {
+		if req.CurWaterUnit == nil {
+			return nil, fmt.Errorf("กรุณากรอก หน่วยน้ำปัจจุบัน")
+		}
+		cur_water_unit = *req.CurWaterUnit
+		water_unit = cur_water_unit - prev_water_unit
+		water_price = contract.Room.WaterPerUnit * water_unit
+	}
 
 	dto_update := &entities.Invoice{
 		Uuid:          req.Uuid,
 		ContractId:    contract.ID,
 		RentPrice:     contract.Room.RentPrice,
-		WaterPrice:    contract.Room.WaterPerUnit * water_unit,
+		WaterPrice:    water_price,
 		ElecPrice:     contract.Room.ElecPerUnit * elec_unit,
 		ElecPerUnit:   contract.Room.ElecPerUnit,
 		WaterPerUnit:  contract.Room.WaterPerUnit,
-		WaterUnit:     water_unit,
+		WaterUnit:     &water_unit,
 		PrevWaterUnit: prev_water_unit,
-		CurWaterUnit:  req.CurWaterUnit,
+		CurWaterUnit:  cur_water_unit,
 
-		ElecUnit:     elec_unit,
-		PrevElecUnit: prev_elec_unit,
-		CurElecUnit:  req.CurElecUnit,
-		TotalAmount:  contract.Room.RentPrice + (contract.Room.WaterPerUnit * water_unit) + (contract.Room.ElecPerUnit * elec_unit),
+		ElecUnit:       elec_unit,
+		PrevElecUnit:   prev_elec_unit,
+		CurElecUnit:    req.CurElecUnit,
+		TotalAmount:    contract.Room.RentPrice + water_price + (contract.Room.ElecPerUnit * elec_unit),
+		IsUnlimitWater: req.IsUnlimitWater,
 	}
 
 	update, err := s.repo.Update(dto_update)
@@ -175,7 +219,16 @@ func (s *InvoiceService) Update(req *dto.UpdateInvoiceDto) (*entities.Invoice, e
 		return nil, err
 	}
 
-	if req.CurElecUnit == prev_invoice.CurElecUnit && req.CurWaterUnit == prev_invoice.CurWaterUnit {
+	var check_equal_water bool
+	if req.IsUnlimitWater != nil && *req.IsUnlimitWater {
+		check_equal_water = true
+	} else if cur_water_unit == prev_invoice.CurWaterUnit {
+		check_equal_water = true
+	} else {
+		check_equal_water = false
+	}
+
+	if req.CurElecUnit == prev_invoice.CurElecUnit && check_equal_water {
 		return update, nil
 	}
 
@@ -184,6 +237,9 @@ func (s *InvoiceService) Update(req *dto.UpdateInvoiceDto) (*entities.Invoice, e
 	}
 
 	pdf_link, err := s.CreatePdf(invoice_dto)
+	if err != nil {
+		return nil, err
+	}
 
 	dto_update = &entities.Invoice{
 		Uuid:    update.Uuid,
@@ -221,7 +277,7 @@ func (s *InvoiceService) CreatePdf(req *dto.FindInvoiceDto) (*entities.StorageRe
 		return nil, err
 	}
 
-	uploadPdf, err := s.storageRepo.Save(bytes.NewReader(generate_pdf), fmt.Sprintf("invoice-%s-%s-%s.pdf", invoice.Contract.Room.Number, invoice.Contract.Customer.Name, time.Now().Format("dd-mm-YYYY")), "application/pdf")
+	uploadPdf, err := s.storageRepo.Save(bytes.NewReader(generate_pdf), fmt.Sprintf("invoice-%s-%s-%s.pdf", invoice.Contract.Room.Number, invoice.Contract.Customer.Name, time.Now().Format("02-01-2006")), "application/pdf")
 	if err != nil {
 		return nil, err
 	}
