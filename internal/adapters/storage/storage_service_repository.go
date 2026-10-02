@@ -13,6 +13,7 @@ import (
 
 	"cloud.google.com/go/storage"
 	"github.com/google/uuid"
+	"google.golang.org/api/option"
 )
 
 type StorageServiceRepository struct {
@@ -25,8 +26,20 @@ func NewStorageRepository() usecases.StorageRepository {
 	}
 }
 
+// GOOGLE_CREDENTIALS_JSON (เนื้อหาไฟล์ json) ใช้บน Cloud Run, ถ้าไม่มีจะอ่านไฟล์จาก GOOGLE_APPLICATION_CREDENTIALS
+func (r *StorageServiceRepository) credentialsJSON() ([]byte, error) {
+	if creds := os.Getenv("GOOGLE_CREDENTIALS_JSON"); creds != "" {
+		return []byte(creds), nil
+	}
+	return os.ReadFile(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+}
+
 func (r *StorageServiceRepository) newClient(ctx context.Context) (*storage.Client, error) {
-	return storage.NewClient(ctx)
+	creds, err := r.credentialsJSON()
+	if err != nil {
+		return nil, err
+	}
+	return storage.NewClient(ctx, option.WithAuthCredentialsJSON(option.ServiceAccount, creds))
 }
 
 func (r *StorageServiceRepository) Save(file io.Reader, filename, contentType string) (*entities.StorageResponse, error) {
@@ -84,7 +97,7 @@ func (r *StorageServiceRepository) GetUrl(fileName string, subFolder string) (st
 		return "", fmt.Errorf("No Found this picture")
 	}
 
-	privateKey, clientEmail, err := r.loadServiceAccount(os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"))
+	privateKey, clientEmail, err := r.loadServiceAccount()
 	if err != nil {
 		return "", fmt.Errorf("loadServiceAccount: %w", err)
 	}
@@ -98,8 +111,8 @@ func (r *StorageServiceRepository) GetUrl(fileName string, subFolder string) (st
 	return url, nil
 }
 
-func (r *StorageServiceRepository) loadServiceAccount(path string) (privateKey string, clientEmail string, err error) {
-	data, err := os.ReadFile(path)
+func (r *StorageServiceRepository) loadServiceAccount() (privateKey string, clientEmail string, err error) {
+	data, err := r.credentialsJSON()
 	if err != nil {
 		return "", "", err
 	}
