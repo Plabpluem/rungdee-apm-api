@@ -50,7 +50,20 @@ func (p *ChromePdfGenerate) Generate(data *usecases.PdfData) ([]byte, error) {
 
 	fileUrl := "file://" + filepath.ToSlash(tmpFile.Name())
 
-	ctx, cancel := chromedp.NewContext(context.Background())
+	// NoSandbox/disable-dev-shm-usage จำเป็นเมื่อรันใน Docker (root + /dev/shm เล็ก)
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.NoSandbox,
+		chromedp.DisableGPU,
+		chromedp.Flag("disable-dev-shm-usage", true),
+	)
+	if chromePath := os.Getenv("CHROME_PATH"); chromePath != "" {
+		opts = append(opts, chromedp.ExecPath(chromePath))
+	}
+
+	allocCtx, cancelAlloc := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancelAlloc()
+
+	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
 	ctx, cancel = context.WithTimeout(ctx, time.Second*30)

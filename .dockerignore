@@ -1,0 +1,7 @@
+.git
+.env
+.env.*
+json
+tmp
+*.exe
+*.log

@@ -62,5 +62,9 @@ func main() {
 	routes.InvoiceRoutes(api, db)
 	routes.StorageRoutes(api)
 
-	app.Listen(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	app.Listen(":" + port)
 }
